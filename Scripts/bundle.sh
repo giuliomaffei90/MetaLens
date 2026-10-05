@@ -18,6 +18,8 @@ rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$BIN" "$APP/Contents/MacOS/MetaLens"
 cp Resources/Info.plist "$APP/Contents/Info.plist"
+# Italian is written in the source; en.lproj holds the English translation.
+cp -R Resources/*.lproj "$APP/Contents/Resources/"
 
 # AppIcon.icon is an Icon Composer document: actool compiles it into Assets.car (Liquid Glass
 # on macOS 26+) plus an AppIcon.icns for older systems.

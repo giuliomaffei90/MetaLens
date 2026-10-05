@@ -14,10 +14,17 @@ public enum Fmt {
     public static let streamKeys = ["title", "language", "handler_name"]
 
     private static let typeLabels = [
-        "video": "Video", "audio": "Audio", "subtitle": "Sottotitoli", "attachment": "Allegato", "data": "Dati",
+        "video": String(localized: "Video"), "audio": String(localized: "Audio"),
+        "subtitle": String(localized: "Sottotitoli"), "attachment": String(localized: "Allegato"),
+        "data": String(localized: "Dati"),
     ]
 
     public static func typeLabel(_ type: String) -> String { typeLabels[type] ?? type }
+
+    /// "Video 0" in the sidebar and the overview; an image has just the one.
+    public static func streamName(_ stream: MediaInfo.Stream, image: Bool) -> String {
+        image ? String(localized: "Immagine") : "\(typeLabel(stream.codecType)) \(stream.index)"
+    }
 
     public static func time(_ value: String?, showMilliseconds: Bool = false) -> String? {
         guard let seconds = value.flatMap(Double.init), seconds.isFinite else { return nil }
@@ -57,7 +64,8 @@ public enum Fmt {
 
     public static func language(_ code: String?) -> String? {
         guard let code, code != "und" else { return nil }
-        return Locale(identifier: "it").localizedString(forLanguageCode: code) ?? code
+        // In the language the interface is shown in, not the region's.
+        return Locale(identifier: Bundle.main.preferredLocalizations.first ?? "it").localizedString(forLanguageCode: code) ?? code
     }
 
     /// FFmpeg reads a still image as a one-frame "sequence": its fps, duration and bitrate
@@ -68,12 +76,12 @@ public enum Fmt {
 
     public static func container(_ info: MediaInfo) -> String {
         isImage(info)
-            ? "Immagine \((info.streams.first?.codecName ?? "").uppercased())"
+            ? String(localized: "Immagine \((info.streams.first?.codecName ?? "").uppercased())")
             : (info.format.formatLongName ?? info.format.formatName)
     }
 
     public static func trackMix(_ info: MediaInfo) -> String {
-        if isImage(info) { return "Immagine" }
+        if isImage(info) { return String(localized: "Immagine") }
         var counts: [(String, Int)] = []
         for stream in info.streams {
             if let position = counts.firstIndex(where: { $0.0 == stream.codecType }) {
@@ -101,8 +109,8 @@ public enum Fmt {
 
     public static func scanType(_ value: String?) -> String? {
         switch value {
-        case "progressive": "Progressivo"
-        case "tt", "bb", "tb", "bt": "Interlacciato"
+        case "progressive": String(localized: "Progressivo")
+        case "tt", "bb", "tb", "bt": String(localized: "Interlacciato")
         case "unknown", .none: nil
         case .some(let other): other
         }
@@ -110,8 +118,8 @@ public enum Fmt {
 
     public static func colorRange(_ value: String?) -> String? {
         switch value {
-        case "tv", "mpeg": "Limitato (TV)"
-        case "pc", "jpeg": "Pieno (PC)"
+        case "tv", "mpeg": String(localized: "Limitato (TV)")
+        case "pc", "jpeg": String(localized: "Pieno (PC)")
         default: nil
         }
     }
@@ -140,9 +148,9 @@ public enum Fmt {
         }
         if stream.colorTransfer == "smpte2084" { badges.append("HDR10") }
         if stream.colorTransfer == "arib-std-b67" { badges.append("HLG") }
-        if stream.disposition?["default"] == 1 { badges.append("Default") }
-        if stream.disposition?["forced"] == 1 { badges.append("Forced") }
-        if stream.disposition?["attached_pic"] == 1 { badges.append("Copertina") }
+        if stream.disposition?["default"] == 1 { badges.append(String(localized: "Default")) }
+        if stream.disposition?["forced"] == 1 { badges.append(String(localized: "Forced")) }
+        if stream.disposition?["attached_pic"] == 1 { badges.append(String(localized: "Copertina")) }
         return badges
     }
 
@@ -153,7 +161,7 @@ public enum Fmt {
             parts = [stream.width.map { "\($0) × \(stream.height ?? 0)" },
                      image ? nil : (fps(stream.avgFrameRate) ?? fps(stream.rFrameRate))]
         case "audio":
-            parts = [stream.channelLayout ?? stream.channels.map { "\($0) canali" },
+            parts = [stream.channelLayout ?? stream.channels.map { String(localized: "\($0) canali") },
                      stream.sampleRate.flatMap(Double.init).map { "\(($0 / 1000).clean) kHz" }]
         default:
             parts = [language(stream.tags?["language"]), stream.tags?["title"]]
@@ -163,42 +171,42 @@ public enum Fmt {
 
     public static func details(_ stream: MediaInfo.Stream, image: Bool = false) -> [Row] {
         let common: [(String, String?)] = [
-            ("Codec", stream.codecLongName),
-            ("Profilo", stream.profile),
-            ("ID codec", stream.codecTagString.flatMap { $0 == "[0][0][0][0]" ? nil : $0 }),
-            ("Bitrate", image ? nil : bitrate(stream.bitRate ?? stream.tags?["BPS"])),
-            ("Lingua", language(stream.tags?["language"])),
-            ("Titolo", stream.tags?["title"]),
+            (String(localized: "Codec"), stream.codecLongName),
+            (String(localized: "Profilo"), stream.profile),
+            (String(localized: "ID codec"), stream.codecTagString.flatMap { $0 == "[0][0][0][0]" ? nil : $0 }),
+            (String(localized: "Bitrate"), image ? nil : bitrate(stream.bitRate ?? stream.tags?["BPS"])),
+            (String(localized: "Lingua"), language(stream.tags?["language"])),
+            (String(localized: "Titolo"), stream.tags?["title"]),
         ]
         var rows: [(String, String?)]
         switch stream.codecType {
         case "video":
             rows = [
-                ("Risoluzione", stream.width.map { "\($0) × \(stream.height ?? 0)" }),
-                ("Codificata", stream.codedWidth.flatMap { coded in
+                (String(localized: "Risoluzione"), stream.width.map { "\($0) × \(stream.height ?? 0)" }),
+                (String(localized: "Codificata"), stream.codedWidth.flatMap { coded in
                     coded == stream.width && stream.codedHeight == stream.height
                         ? nil : "\(coded) × \(stream.codedHeight ?? 0)"
                 }),
-                ("Aspetto", stream.displayAspectRatio),
-                ("Frame rate", image ? nil : (fps(stream.avgFrameRate) ?? fps(stream.rFrameRate))),
-                ("Pixel", stream.pixFmt),
-                ("Profondità", stream.bitsPerRawSample.map { "\($0) bit" }),
-                ("Scansione", image ? nil : scanType(stream.fieldOrder)),
-                ("Colore", [stream.colorPrimaries, stream.colorTransfer, stream.colorSpace]
+                (String(localized: "Aspetto"), stream.displayAspectRatio),
+                (String(localized: "Frame rate"), image ? nil : (fps(stream.avgFrameRate) ?? fps(stream.rFrameRate))),
+                (String(localized: "Pixel"), stream.pixFmt),
+                (String(localized: "Profondità"), stream.bitsPerRawSample.map { "\($0) bit" }),
+                (String(localized: "Scansione"), image ? nil : scanType(stream.fieldOrder)),
+                (String(localized: "Colore"), [stream.colorPrimaries, stream.colorTransfer, stream.colorSpace]
                     .compactMap { $0 }.joined(separator: " · ").nilIfEmpty),
-                ("Intervallo colore", colorRange(stream.colorRange)),
-                ("Livello", level(stream)),
-                ("Fotogrammi", image ? nil : count(stream.nbFrames)),
+                (String(localized: "Intervallo colore"), colorRange(stream.colorRange)),
+                (String(localized: "Livello"), level(stream)),
+                (String(localized: "Fotogrammi"), image ? nil : count(stream.nbFrames)),
             ] + common
         case "audio":
             rows = [
-                ("Canali", stream.channels.map { channels in
+                (String(localized: "Canali"), stream.channels.map { channels in
                     stream.channelLayout.map { "\(channels) (\($0))" } ?? "\(channels)"
                 }),
-                ("Campionamento", stream.sampleRate.flatMap(Double.init).map { "\(($0 / 1000).clean) kHz" }),
+                (String(localized: "Campionamento"), stream.sampleRate.flatMap(Double.init).map { "\(($0 / 1000).clean) kHz" }),
             ] + common
         case "subtitle":
-            rows = [("Elementi", count(stream.nbFrames))] + common
+            rows = [(String(localized: "Elementi"), count(stream.nbFrames))] + common
         default:
             rows = common
         }
@@ -209,14 +217,14 @@ public enum Fmt {
         let image = isImage(info)
         var lines = [
             URL(filePath: info.format.filename).lastPathComponent,
-            "Formato: \(container(info))",
+            String(localized: "Formato: \(container(info))"),
         ]
-        if !image { lines.append("Durata: \(time(info.format.duration, showMilliseconds: true) ?? "—")") }
-        lines.append("Dimensione: \(bytes(info.format.size) ?? "—")")
-        if !image { lines.append("Bitrate: \(bitrate(info.format.bitRate) ?? "—")") }
+        if !image { lines.append(String(localized: "Durata: \(time(info.format.duration, showMilliseconds: true) ?? "—")")) }
+        lines.append(String(localized: "Dimensione: \(bytes(info.format.size) ?? "—")"))
+        if !image { lines.append(String(localized: "Bitrate: \(bitrate(info.format.bitRate) ?? "—")")) }
 
         for stream in info.streams {
-            let head = image ? "Immagine" : "#\(stream.index) \(typeLabel(stream.codecType))"
+            let head = image ? String(localized: "Immagine") : "#\(stream.index) \(typeLabel(stream.codecType))"
             lines.append("")
             lines.append("\(head) — \((stream.codecName ?? "?").uppercased())")
             for row in details(stream, image: image) {

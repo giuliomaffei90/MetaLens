@@ -1,0 +1,96 @@
+/* English. Keys are the Italian strings in the source; a missing key shows the Italian text. */
+
+/* Window and sidebar */
+"Nessun file" = "No File";
+"Nessun file aperto" = "No File Open";
+"Trascina qui un file video, audio o un'immagine per vederne i metadati." = "Drag a video, audio or image file here to see its metadata.";
+"Scegli file…" = "Choose File…";
+"Panoramica" = "Overview";
+"Metadati" = "Metadata";
+"Capitoli" = "Chapters";
+"Tracce" = "Tracks";
+"Immagine" = "Image";
+"Lettura…" = "Reading…";
+"Salvataggio…" = "Saving…";
+"1 modifica non salvata" = "1 unsaved change";
+"%lld modifiche non salvate" = "%lld unsaved changes";
+
+/* Toolbar and menus */
+"Apri" = "Open";
+"Apri…" = "Open…";
+"Apri un file" = "Open a file";
+"Copia report" = "Copy Report";
+"Copia il riepilogo negli appunti" = "Copy the summary to the clipboard";
+"Salva" = "Save";
+"Scrive i metadati modificati nel file" = "Write the edited metadata to the file";
+"Scegli un file audio, video o un'immagine" = "Choose an audio or video file, or an image";
+
+/* Alerts */
+"Salvare le modifiche?" = "Save Changes?";
+"Il file verrà riscritto con i nuovi metadati. Audio e video non vengono ricodificati." = "The file will be rewritten with the new metadata. Audio and video are not re-encoded.";
+"Annulla" = "Cancel";
+"Impossibile leggere il file" = "Couldn’t read the file";
+"Impossibile salvare i metadati" = "Couldn’t save the metadata";
+"%@ non trovato. Installa FFmpeg con: brew install ffmpeg" = "%@ not found. Install FFmpeg with: brew install ffmpeg";
+"%@ è uscito con codice %d" = "%@ exited with code %d";
+
+/* Overview */
+"Nome" = "Name";
+"Formato" = "Format";
+"Profilo" = "Profile";
+"Durata" = "Duration";
+"Dimensione" = "Size";
+"Contenuto" = "Contents";
+"Titolo" = "Title";
+"Immagine %@" = "%@ Image";
+"Formato: %@" = "Format: %@";
+"Durata: %@" = "Duration: %@";
+"Dimensione: %@" = "Size: %@";
+
+/* Track types */
+"Sottotitoli" = "Subtitles";
+"Allegato" = "Attachment";
+"Dati" = "Data";
+
+/* Track details */
+"Dettagli" = "Details";
+"Caratteristiche" = "Features";
+"Copertina" = "Cover Art";
+"ID codec" = "Codec ID";
+"Lingua" = "Language";
+"Risoluzione" = "Resolution";
+"Codificata" = "Coded size";
+"Aspetto" = "Aspect ratio";
+"Pixel" = "Pixel format";
+"Profondità" = "Bit depth";
+"Scansione" = "Scan type";
+"Progressivo" = "Progressive";
+"Interlacciato" = "Interlaced";
+"Colore" = "Color";
+"Intervallo colore" = "Color range";
+"Limitato (TV)" = "Limited (TV)";
+"Pieno (PC)" = "Full (PC)";
+"Livello" = "Level";
+"Fotogrammi" = "Frames";
+"Canali" = "Channels";
+"%lld canali" = "%lld channels";
+"Campionamento" = "Sample rate";
+"Elementi" = "Events";
+"Sulle immagini MetaLens legge i metadati ma non li scrive: riscrivere il file con FFmpeg perderebbe EXIF e profilo colore." = "MetaLens reads metadata from images but doesn’t write it: rewriting the file with FFmpeg would lose the EXIF data and the color profile.";
+
+/* Chapters */
+"Inizio" = "Start";
+"Fine" = "End";
+
+/* Tag editor */
+"Metadati globali del file. Un campo lasciato vuoto viene rimosso al salvataggio." = "File-wide metadata. A field left empty is removed when you save.";
+"valore" = "value";
+"nuovo campo" = "new field";
+"Modificato" = "Edited";
+"Rimuovi %@" = "Remove %@";
+"Rimuovi il campo" = "Remove field";
+"Ripristina %@" = "Restore %@";
+"Ripristina il campo" = "Restore field";
+"Campi suggeriti" = "Suggested Fields";
+"Campi usati di frequente" = "Frequently used fields";
+"Aggiungi il campo" = "Add Field";

@@ -6,7 +6,7 @@ public enum FFmpegError: LocalizedError {
 
     public var errorDescription: String? {
         switch self {
-        case .notFound(let tool): "\(tool) non trovato. Installa FFmpeg con: brew install ffmpeg"
+        case .notFound(let tool): String(localized: "\(tool) non trovato. Installa FFmpeg con: brew install ffmpeg")
         case .failed(let message): message
         }
     }
@@ -39,7 +39,7 @@ enum FFmpeg {
         process.waitUntilExit()
         guard process.terminationStatus == 0 else {
             let message = String(decoding: errorData, as: UTF8.self).trimmingCharacters(in: .whitespacesAndNewlines)
-            throw FFmpegError.failed(message.isEmpty ? "\(name) è uscito con codice \(process.terminationStatus)" : message)
+            throw FFmpegError.failed(message.isEmpty ? String(localized: "\(name) è uscito con codice \(process.terminationStatus)") : message)
         }
         return data
     }

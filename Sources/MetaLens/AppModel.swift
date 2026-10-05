@@ -34,9 +34,11 @@ final class AppModel: ObservableObject {
 
     /// Window subtitle: what is happening, or what is pending.
     var status: String {
-        if busy { return saving ? "Salvataggio…" : "Lettura…" }
+        if busy { return saving ? String(localized: "Salvataggio…") : String(localized: "Lettura…") }
         guard changes > 0 else { return "" }
-        return "\(changes) \(changes == 1 ? "modifica non salvata" : "modifiche non salvate")"
+        return changes == 1
+            ? String(localized: "1 modifica non salvata")
+            : String(localized: "\(changes) modifiche non salvate")
     }
 
     /// `MetaLens file.mkv` from the terminal.
@@ -60,7 +62,7 @@ final class AppModel: ObservableObject {
                 resetDraft()
                 selection = .overview
             } catch {
-                failure = Failure(title: "Impossibile leggere il file",
+                failure = Failure(title: String(localized: "Impossibile leggere il file"),
                                   message: error.localizedDescription)
             }
             busy = false
@@ -116,7 +118,7 @@ final class AppModel: ObservableObject {
                 info = try await Task.detached { try Media.probe(url) }.value
                 resetDraft()
             } catch {
-                failure = Failure(title: "Impossibile salvare i metadati",
+                failure = Failure(title: String(localized: "Impossibile salvare i metadati"),
                                   message: error.localizedDescription)
             }
             busy = false

@@ -9,10 +9,11 @@
 	<key>CFBundleExecutable</key>
 	<string>MetaLens</string>
 	<key>CFBundleDevelopmentRegion</key>
-	<string>it</string>
+	<string>en</string>
 	<key>CFBundleLocalizations</key>
 	<array>
 		<string>it</string>
+		<string>en</string>
 	</array>
 	<key>CFBundleIdentifier</key>
 	<string>app.metalens.desktop</string>

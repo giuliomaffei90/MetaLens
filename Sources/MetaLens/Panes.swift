@@ -23,13 +23,13 @@ struct OverviewPane: View {
                 LabeledContent("Contenuto", value: Fmt.trackMix(info))
             }
 
-            Section(image ? "Immagine" : "Tracce") {
+            Section(image ? LocalizedStringKey("Immagine") : "Tracce") {
                 ForEach(info.streams) { stream in
                     LabeledContent {
                         Text(Fmt.summary(stream, image: image))
                             .foregroundStyle(.secondary)
                     } label: {
-                        Text("\(image ? "Immagine" : "\(Fmt.typeLabel(stream.codecType)) \(stream.index)") · \((stream.codecName ?? "?").uppercased())")
+                        Text(verbatim: "\(Fmt.streamName(stream, image: image)) · \((stream.codecName ?? "?").uppercased())")
                     }
                 }
             }
@@ -164,7 +164,7 @@ struct TagEditor: View {
     @Binding var tags: [String: String]
     let original: [String: String]
     let suggestions: [String]
-    var footer: String?
+    var footer: LocalizedStringKey?
 
     @State private var newKey = ""
     @State private var newValue = ""

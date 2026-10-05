@@ -13,7 +13,7 @@ struct ContentView: View {
         } detail: {
             detail
         }
-        .navigationTitle(model.url?.lastPathComponent ?? "Nessun file")
+        .navigationTitle(model.url?.lastPathComponent ?? String(localized: "Nessun file"))
         .navigationSubtitle(model.status)
         .toolbar { toolbar }
         .focusedSceneValue(\.fileActions, menuActions)
@@ -109,13 +109,11 @@ struct ContentView: View {
                             .tag(AppModel.Selection.chapters)
                     }
                 }
-                Section(model.isImage ? "Immagine" : "Tracce") {
+                Section(model.isImage ? LocalizedStringKey("Immagine") : "Tracce") {
                     ForEach(info.streams) { stream in
                         Label {
                             VStack(alignment: .leading, spacing: 1) {
-                                Text(model.isImage
-                                    ? "Immagine"
-                                    : "\(Fmt.typeLabel(stream.codecType)) \(stream.index)")
+                                Text(Fmt.streamName(stream, image: model.isImage))
                                 Text((stream.codecName ?? "?").uppercased())
                                     .font(.caption)
                                     .foregroundStyle(.secondary)

@@ -35,4 +35,5 @@ Da terminale l'app accetta un file: `.build/MetaLens.app/Contents/MacOS/MetaLens
 - `AppIcon.icon` — progetto Icon Composer (Liquid Glass); aprilo con
   `open -a "Icon Composer" AppIcon.icon`. `Scripts/bundle.sh` lo compila con `actool`
   in `Assets.car` + `AppIcon.icns`.
-- `Resources` — Info.plist
+- `Resources` — Info.plist e traduzioni: le stringhe nel codice sono in italiano e fanno da chiave,
+  `en.lproj` contiene l'inglese (le lingue non tradotte ricadono sull'inglese)
