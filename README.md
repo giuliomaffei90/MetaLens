@@ -5,7 +5,9 @@ SwiftUI; legge e scrive tramite FFmpeg, così restano supportati MKV, sottotitol
 
 ## Requisiti
 
-- macOS 14 o successivo, Xcode (o le Command Line Tools) per compilare
+- macOS 14 o successivo (su macOS 26+ l'interfaccia adotta Liquid Glass; sui sistemi
+  precedenti gli stessi comandi usano l'aspetto classico)
+- Xcode (o le Command Line Tools) per compilare
 - FFmpeg (`ffprobe` e `ffmpeg`) nel PATH: `brew install ffmpeg`
 
 ## Sviluppo
@@ -18,6 +20,11 @@ open .build/MetaLens.app    # avvia
 ```
 
 Puoi anche aprire `Package.swift` con Xcode.
+
+`Scripts/bundle.sh` marchia il binario con l'SDK reale (`-platform_version`): senza, SwiftPM
+registra come SDK il target minimo e macOS disegnerebbe l'app con l'aspetto di macOS 14.
+La soglia minima è in `MIN_MACOS` nello script, in `Package.swift` e in `Resources/Info.plist`:
+vanno cambiate insieme.
 
 Da terminale l'app accetta un file: `.build/MetaLens.app/Contents/MacOS/MetaLens video.mkv`.
 

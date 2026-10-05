@@ -10,6 +10,9 @@ struct OverviewPane: View {
             Section("File") {
                 LabeledContent("Nome", value: URL(filePath: info.format.filename).lastPathComponent)
                 LabeledContent("Formato", value: Fmt.container(info))
+                if let brand = Fmt.containerBrand(info) {
+                    LabeledContent("Profilo", value: brand)
+                }
                 if !image {
                     LabeledContent("Durata", value: Fmt.time(info.format.duration, showMilliseconds: true) ?? "—")
                 }
@@ -184,12 +187,12 @@ struct TagEditor: View {
                             Image(systemName: "pencil.circle.fill")
                                 .foregroundStyle(.tint)
                                 .help("Modificato")
+                                .accessibilityLabel("Modificato")
                         }
-                        Button {
+                        Button("Rimuovi \(key)", systemImage: "minus.circle") {
                             tags.removeValue(forKey: key)
-                        } label: {
-                            Image(systemName: "minus.circle")
                         }
+                        .labelStyle(.iconOnly)
                         .buttonStyle(.borderless)
                         .help("Rimuovi il campo")
                     }
@@ -203,11 +206,10 @@ struct TagEditor: View {
                             .strikethrough()
                             .foregroundStyle(.secondary)
                         Spacer()
-                        Button {
+                        Button("Ripristina \(key)", systemImage: "arrow.uturn.backward.circle") {
                             tags[key] = original[key]
-                        } label: {
-                            Image(systemName: "arrow.uturn.backward.circle")
                         }
+                        .labelStyle(.iconOnly)
                         .buttonStyle(.borderless)
                         .help("Ripristina il campo")
                     }
@@ -221,20 +223,21 @@ struct TagEditor: View {
                     .textFieldStyle(.roundedBorder)
                     .labelsHidden()
                     .frame(width: 150)
-                Menu("") {
+                Menu("Campi suggeriti") {
                     ForEach(suggestions.filter { tags[$0] == nil }, id: \.self) { suggestion in
                         Button(suggestion) { newKey = suggestion }
                     }
                 }
+                .labelsHidden()
                 .menuStyle(.borderlessButton)
                 .frame(width: 16)
+                .help("Campi usati di frequente")
                 TextField("valore", text: $newValue)
                     .textFieldStyle(.roundedBorder)
                     .labelsHidden()
                     .onSubmit(add)
-                Button(action: add) {
-                    Image(systemName: "plus.circle")
-                }
+                Button("Aggiungi il campo", systemImage: "plus.circle", action: add)
+                .labelStyle(.iconOnly)
                 .buttonStyle(.borderless)
                 .disabled(newKey.trimmingCharacters(in: .whitespaces).isEmpty)
                 .help("Aggiungi il campo")

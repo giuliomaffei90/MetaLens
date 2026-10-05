@@ -15,14 +15,30 @@ struct MetaLensApp: App {
         .defaultSize(width: 1040, height: 700)
         .commands {
             CommandGroup(replacing: .newItem) {}
-            CommandGroup(after: .newItem) {
-                Button("Apri…") { model.chooseFile() }
-                    .keyboardShortcut("o")
-                Button("Salva metadati") { model.requestSave() }
-                    .keyboardShortcut("s")
-                Button("Copia report") { model.copyReport() }
-                    .keyboardShortcut("c", modifiers: [.command, .shift])
-            }
+            FileCommands()
+            SidebarCommands()
+        }
+    }
+}
+
+/// The toolbar actions, mirrored in the menu bar: people can hide the toolbar, and the
+/// menu bar is where they look for commands and keyboard shortcuts.
+struct FileCommands: Commands {
+    @FocusedValue(\.fileActions) private var actions
+
+    var body: some Commands {
+        CommandGroup(after: .newItem) {
+            Button("Apri…") { actions?.open?() }
+                .keyboardShortcut("o")
+                .disabled(actions?.open == nil)
+            Button("Salva") { actions?.save?() }
+                .keyboardShortcut("s")
+                .disabled(actions?.save == nil)
+        }
+        CommandGroup(after: .pasteboard) {
+            Button("Copia report") { actions?.copyReport?() }
+                .keyboardShortcut("c", modifiers: [.command, .shift])
+                .disabled(actions?.copyReport == nil)
         }
     }
 }

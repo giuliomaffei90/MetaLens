@@ -36,6 +36,13 @@ public struct MediaInfo: Decodable, Sendable {
         public var colorSpace: String?
         public var displayAspectRatio: String?
         public var bitsPerRawSample: String?
+        public var level: Int?
+        public var fieldOrder: String?
+        public var colorRange: String?
+        public var nbFrames: String?
+        public var codecTagString: String?
+        public var codedWidth: Int?
+        public var codedHeight: Int?
         public var tags: [String: String]?
         public var disposition: [String: Int]?
         public var sideDataList: [SideData]?

@@ -32,16 +32,16 @@ public enum Fmt {
     }
 
     public static func bytes(_ value: String?) -> String? {
-        guard let count = value.flatMap(Double.init), count.isFinite else { return nil }
-        let units = ["B", "KB", "MB", "GB", "TB"]
-        let step = count > 0 ? min(Int(log(count) / log(1024)), units.count - 1) : 0
-        let scaled = count / pow(1024, Double(step))
-        return step == 0 ? "\(Int(scaled)) \(units[step])" : String(format: "%.2f %@", scaled, units[step])
+        guard let count = value.flatMap(Int64.init) else { return nil }
+        return count.formatted(.byteCount(style: .file))
     }
 
     public static func bitrate(_ value: String?) -> String? {
-        guard let bits = value.flatMap(Double.init), bits.isFinite else { return nil }
-        return bits >= 1e6 ? String(format: "%.2f Mb/s", bits / 1e6) : "\(Int((bits / 1e3).rounded())) kb/s"
+        guard let bits = value.flatMap(Double.init), bits.isFinite, bits > 0 else { return nil }
+        if bits >= 1e6 { return String(format: "%.2f Mb/s", bits / 1e6) }
+        // Subtitle tracks run at a few dozen bit/s: rounding them to kb/s would show "0 kb/s".
+        if bits < 1000 { return "\(Int(bits.rounded())) bit/s" }
+        return "\(Int((bits / 1e3).rounded())) kb/s"
     }
 
     public static func fps(_ value: String?) -> String? {
@@ -85,6 +85,54 @@ public enum Fmt {
         return counts.map { "\($0.1) \(typeLabel($0.0).lowercased())" }.joined(separator: " · ")
     }
 
+    /// H.264 stores the level ×10, HEVC ×30: 93 is level 3.1. Other codecs use their own
+    /// numbering, so show the raw value rather than invent one.
+    public static func level(_ stream: MediaInfo.Stream) -> String? {
+        guard let level = stream.level, level > 0 else { return nil }
+        let divisor: Int
+        switch stream.codecName {
+        case "hevc": divisor = 30
+        case "h264": divisor = 10
+        default: return String(level)
+        }
+        let whole = level / divisor, rest = level % divisor
+        return rest == 0 ? "L\(whole)" : "L\(whole).\(rest * 10 / divisor)"
+    }
+
+    public static func scanType(_ value: String?) -> String? {
+        switch value {
+        case "progressive": "Progressivo"
+        case "tt", "bb", "tb", "bt": "Interlacciato"
+        case "unknown", .none: nil
+        case .some(let other): other
+        }
+    }
+
+    public static func colorRange(_ value: String?) -> String? {
+        switch value {
+        case "tv", "mpeg": "Limitato (TV)"
+        case "pc", "jpeg": "Pieno (PC)"
+        default: nil
+        }
+    }
+
+    public static func count(_ value: String?) -> String? {
+        guard let count = value.flatMap(Int.init), count > 0 else { return nil }
+        return count.formatted()
+    }
+
+    /// The four-character brand an MP4/MOV declares; MediaInfo shows it as the format profile.
+    public static func containerBrand(_ info: MediaInfo) -> String? {
+        guard let brand = info.format.tags?["major_brand"]?.trimmingCharacters(in: .whitespaces),
+              !brand.isEmpty else { return nil }
+        let names = [
+            "isom": "MPEG-4 (Base Media)", "iso2": "MPEG-4 (Base Media v2)",
+            "mp41": "MPEG-4 v1", "mp42": "MPEG-4 v2", "avc1": "MPEG-4 (AVC)",
+            "qt  ": "QuickTime", "M4V ": "MPEG-4 Video", "M4A ": "MPEG-4 Audio",
+        ]
+        return names[brand].map { "\($0) · \(brand)" } ?? brand
+    }
+
     public static func badges(_ stream: MediaInfo.Stream) -> [String] {
         var badges: [String] = []
         if stream.sideDataList?.contains(where: { $0.sideDataType?.contains("DOVI") == true }) == true {
@@ -117,6 +165,7 @@ public enum Fmt {
         let common: [(String, String?)] = [
             ("Codec", stream.codecLongName),
             ("Profilo", stream.profile),
+            ("ID codec", stream.codecTagString.flatMap { $0 == "[0][0][0][0]" ? nil : $0 }),
             ("Bitrate", image ? nil : bitrate(stream.bitRate ?? stream.tags?["BPS"])),
             ("Lingua", language(stream.tags?["language"])),
             ("Titolo", stream.tags?["title"]),
@@ -126,12 +175,20 @@ public enum Fmt {
         case "video":
             rows = [
                 ("Risoluzione", stream.width.map { "\($0) × \(stream.height ?? 0)" }),
+                ("Codificata", stream.codedWidth.flatMap { coded in
+                    coded == stream.width && stream.codedHeight == stream.height
+                        ? nil : "\(coded) × \(stream.codedHeight ?? 0)"
+                }),
                 ("Aspetto", stream.displayAspectRatio),
                 ("Frame rate", image ? nil : (fps(stream.avgFrameRate) ?? fps(stream.rFrameRate))),
                 ("Pixel", stream.pixFmt),
                 ("Profondità", stream.bitsPerRawSample.map { "\($0) bit" }),
+                ("Scansione", image ? nil : scanType(stream.fieldOrder)),
                 ("Colore", [stream.colorPrimaries, stream.colorTransfer, stream.colorSpace]
                     .compactMap { $0 }.joined(separator: " · ").nilIfEmpty),
+                ("Intervallo colore", colorRange(stream.colorRange)),
+                ("Livello", level(stream)),
+                ("Fotogrammi", image ? nil : count(stream.nbFrames)),
             ] + common
         case "audio":
             rows = [
@@ -140,6 +197,8 @@ public enum Fmt {
                 }),
                 ("Campionamento", stream.sampleRate.flatMap(Double.init).map { "\(($0 / 1000).clean) kHz" }),
             ] + common
+        case "subtitle":
+            rows = [("Elementi", count(stream.nbFrames))] + common
         default:
             rows = common
         }

@@ -19,10 +19,25 @@ final class AppModel: ObservableObject {
     @Published var draftStreams: [Int: [String: String]] = [:]
     @Published var selection: Selection? = .overview
     @Published var busy = false
+    @Published private(set) var saving = false
     @Published var confirmingSave = false
-    @Published var errorMessage: String?
+    @Published var importing = false
+    @Published var failure: Failure?
+
+    struct Failure: Identifiable {
+        let id = UUID()
+        var title: String
+        var message: String
+    }
 
     var isImage: Bool { info.map(Fmt.isImage) ?? false }
+
+    /// Window subtitle: what is happening, or what is pending.
+    var status: String {
+        if busy { return saving ? "Salvataggio…" : "Lettura…" }
+        guard changes > 0 else { return "" }
+        return "\(changes) \(changes == 1 ? "modifica non salvata" : "modifiche non salvate")"
+    }
 
     /// `MetaLens file.mkv` from the terminal.
     func openFromCommandLine() {
@@ -30,12 +45,9 @@ final class AppModel: ObservableObject {
         load(URL(filePath: path))
     }
 
+    /// Shown as a sheet on the window by `.fileImporter`, not as a free-floating modal panel.
     func chooseFile() {
-        let panel = NSOpenPanel()
-        panel.allowsMultipleSelection = false
-        panel.canChooseDirectories = false
-        panel.prompt = "Apri"
-        if panel.runModal() == .OK, let chosen = panel.url { load(chosen) }
+        importing = true
     }
 
     func load(_ fileURL: URL) {
@@ -48,7 +60,8 @@ final class AppModel: ObservableObject {
                 resetDraft()
                 selection = .overview
             } catch {
-                errorMessage = "Impossibile leggere il file.\n\(error.localizedDescription)"
+                failure = Failure(title: "Impossibile leggere il file",
+                                  message: error.localizedDescription)
             }
             busy = false
         }
@@ -93,7 +106,9 @@ final class AppModel: ObservableObject {
         guard let url, changes > 0 else { return }
         let edits = edits
         busy = true
+        saving = true
         Task {
+            defer { saving = false }
             do {
                 try await Task.detached {
                     try Media.save(url: url, formatTags: edits.format, streamTags: edits.streams)
@@ -101,7 +116,8 @@ final class AppModel: ObservableObject {
                 info = try await Task.detached { try Media.probe(url) }.value
                 resetDraft()
             } catch {
-                errorMessage = "Salvataggio non riuscito.\n\(error.localizedDescription)"
+                failure = Failure(title: "Impossibile salvare i metadati",
+                                  message: error.localizedDescription)
             }
             busy = false
         }

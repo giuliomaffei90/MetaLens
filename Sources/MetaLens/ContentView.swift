@@ -1,5 +1,6 @@
 import MetaLensKit
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct ContentView: View {
     @ObservedObject var model: AppModel
@@ -12,32 +13,10 @@ struct ContentView: View {
         } detail: {
             detail
         }
-        .navigationTitle(model.url?.lastPathComponent ?? "MetaLens")
-        .navigationSubtitle(model.changes > 0
-            ? "\(model.changes) \(model.changes == 1 ? "modifica non salvata" : "modifiche non salvate")"
-            : "")
-        .toolbar {
-            ToolbarItemGroup {
-                if model.busy { ProgressView().controlSize(.small) }
-                Button {
-                    model.copyReport()
-                } label: {
-                    Label("Copia report", systemImage: "doc.on.doc")
-                }
-                .disabled(model.info == nil)
-                Button {
-                    model.requestSave()
-                } label: {
-                    Label("Salva", systemImage: "square.and.arrow.down")
-                }
-                .disabled(model.changes == 0)
-                Button {
-                    model.chooseFile()
-                } label: {
-                    Label("Apri", systemImage: "folder")
-                }
-            }
-        }
+        .navigationTitle(model.url?.lastPathComponent ?? "Nessun file")
+        .navigationSubtitle(model.status)
+        .toolbar { toolbar }
+        .focusedSceneValue(\.fileActions, menuActions)
         .onDrop(of: [.fileURL], isTargeted: $dragging) { providers in
             guard let provider = providers.first else { return false }
             _ = provider.loadObject(ofClass: URL.self) { url, _ in
@@ -53,22 +32,65 @@ struct ContentView: View {
                     .ignoresSafeArea()
             }
         }
+        .fileImporter(isPresented: $model.importing,
+                      allowedContentTypes: [.movie, .audio, .image, .data]) { result in
+            if case .success(let url) = result { model.load(url) }
+        }
+        .fileDialogMessage("Scegli un file audio, video o un'immagine")
+        .fileDialogConfirmationLabel("Apri")
         .alert("Salvare le modifiche?", isPresented: $model.confirmingSave) {
             Button("Salva") { model.save() }
             Button("Annulla", role: .cancel) {}
         } message: {
             Text("Il file verrà riscritto con i nuovi metadati. Audio e video non vengono ricodificati.")
         }
-        .alert("Errore", isPresented: Binding(
-            get: { model.errorMessage != nil },
-            set: { if !$0 { model.errorMessage = nil } }
-        )) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text(model.errorMessage ?? "")
+        .alert(item: $model.failure) { failure in
+            Alert(title: Text(failure.title),
+                  message: Text(failure.message),
+                  dismissButton: .default(Text("OK")))
         }
         .modify { view in
             if let url = model.url { view.navigationDocument(url) } else { view }
+        }
+    }
+
+    private var menuActions: FileActions {
+        FileActions(open: { model.chooseFile() },
+                    save: model.changes > 0 ? { model.requestSave() } : nil,
+                    copyReport: model.info != nil ? { model.copyReport() } : nil)
+    }
+
+    @ToolbarContentBuilder
+    private var toolbar: some ToolbarContent {
+        if model.busy {
+            ToolbarItem {
+                ProgressView().controlSize(.small)
+            }
+            .withoutSharedBackground()
+        }
+        ToolbarItemGroup {
+            Button {
+                model.chooseFile()
+            } label: {
+                Label("Apri", systemImage: "folder")
+            }
+            .help("Apri un file")
+            Button {
+                model.copyReport()
+            } label: {
+                Label("Copia report", systemImage: "doc.on.doc")
+            }
+            .help("Copia il riepilogo negli appunti")
+            .disabled(model.info == nil)
+        }
+        ToolbarGap()
+        ToolbarItem {
+            // The one primary action, tinted and on the trailing edge. Text, not a symbol:
+            // no symbol says "write the metadata into the file" to everyone.
+            Button("Salva") { model.requestSave() }
+                .prominentToolbarButton()
+                .disabled(model.changes == 0)
+                .help("Scrive i metadati modificati nel file")
         }
     }
 
