@@ -51,7 +51,7 @@
 ## Installation
 
 ```bash
-git clone https://gitlab.com/giuliomaffei90/MetaLens.git
+git clone https://github.com/giuliomaffei90/MetaLens.git
 cd MetaLens
 Scripts/bundle.sh release
 open .build/MetaLens.app
